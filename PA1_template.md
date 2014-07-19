@@ -4,12 +4,12 @@ This assignment makes use of data from a personal activity monitoring device suc
 This device collects data at 5 minute intervals through out the day.  
 The data consists of two months of data from an anonymous individual collected during the months of October and November, 2012 and include the number of steps taken in 5 minute intervals each day.
 
-```{r setoptions, echo=TRUE}
-```
+
 
 ## Loading and preprocessing the data
 
-```{r}
+
+```r
 filename <- "activity.csv"
 dataset <- read.csv(filename, colClasses=c('numeric', 'Date', 'numeric'))
 ```
@@ -18,13 +18,15 @@ dataset <- read.csv(filename, colClasses=c('numeric', 'Date', 'numeric'))
 
 Ignore the missing values in the dataset
 
-```{r}
+
+```r
 dataset.good <- dataset[complete.cases(dataset),]
 ```
 
 Plot the histogram of the total number of steps taken per day
 
-```{r}
+
+```r
 steps.per.day <- tapply(dataset.good$steps, dataset.good$date, sum)
 hist(steps.per.day, 
      breaks=10,
@@ -34,21 +36,34 @@ hist(steps.per.day,
      main='Total number of steps taken per days (no missing values)')
 ```
 
+![plot of chunk unnamed-chunk-3](figure/unnamed-chunk-3.png) 
+
 Calculate and report the mean and median total number of steps taken per day
 
-```{r}
+
+```r
 mean(steps.per.day)
 ```
 
-```{r}
+```
+## [1] 10766
+```
+
+
+```r
 median(steps.per.day)
+```
+
+```
+## [1] 10765
 ```
 
 ## What is the average daily activity pattern?
 
 Make a time series plot of the average number of steps taken every 5-minute interval, averaged across all days
 
-```{r}
+
+```r
 library(plyr)
 group.by.interval <- ddply(dataset.good, .(interval), summarize, meansteps=mean(steps))
 
@@ -60,21 +75,29 @@ with(group.by.interval, {
 })
 ```
 
+![plot of chunk unnamed-chunk-6](figure/unnamed-chunk-6.png) 
+
 Which 5-minute interval, on average across all the days in the dataset, contains the maximum number of steps?
 
-```{r}
+
+```r
 max.meansteps <- max(group.by.interval$meansteps)
 max.interval <- group.by.interval$interval[group.by.interval$meansteps==max.meansteps]
 ```
 
-On average across all the days in the dataset, the `r max.interval`-th 5-minute interval contains the maximum number of steps (`r max.meansteps`).
+On average across all the days in the dataset, the 835-th 5-minute interval contains the maximum number of steps (206.1698).
 
 ## Imputing missing values
 
 Calculate and report the total number of missing values in the dataset
 
-```{r}
+
+```r
 sum(!complete.cases(dataset))
+```
+
+```
+## [1] 2304
 ```
 
 Devise a strategy for filling in all of the missing values in the dataset.
@@ -83,7 +106,8 @@ I used the mean number of steps for the 5-minute intervals to fill the missing v
 
 *first I computed the mean number of steps for all the 5-minute intervals
 
-```{r}
+
+```r
 split.by.interval <- split(dataset.good$steps, dataset.good$interval)
 meansteps.per.interval <- lapply(split.by.interval, mean)
 
@@ -94,7 +118,8 @@ meansteps.per.interval <- data.frame(
 
 *second I fill the missing values with the mean number of steps computed above
 
-```{r}
+
+```r
 dataset.bad <- dataset[!complete.cases(dataset),]
 
 dataset.merged <- merge(dataset.bad, meansteps.per.interval,
@@ -108,14 +133,16 @@ names(dataset.merged) <- c('steps', 'date', 'interval')
 
 Create a new dataset that is equal to the original dataset but with the missing data filled in
 
-```{r}
+
+```r
 dataset.imputed <- rbind(dataset.good, dataset.merged)
 dataset.imputed <- dataset.imputed[order(dataset.imputed$date, dataset.imputed$interval),]
 ```
 
 Make an histogram of the total number of steps taken each day.
 
-```{r}
+
+```r
 steps.per.day.imputed <- tapply(dataset.imputed$steps, dataset.imputed$date, sum)
 
 hist(steps.per.day.imputed,
@@ -126,14 +153,26 @@ hist(steps.per.day.imputed,
      xlab="total number of steps taken each day")
 ```
 
+![plot of chunk unnamed-chunk-12](figure/unnamed-chunk-12.png) 
+
 Calculate and report the mean and median total number of steps taken per day
 
-```{r}
+
+```r
 mean(steps.per.day.imputed)
 ```
 
-```{r}
+```
+## [1] 10766
+```
+
+
+```r
 median(steps.per.day.imputed)
+```
+
+```
+## [1] 10766
 ```
 
 Do these values differ from the estimates from the first part of the assignment?
@@ -148,7 +187,8 @@ Of course the total daily number of steps is increased after having inputed the 
 
 Create a new factor variable in the dataset with two levels - "weekday" and "weekend" indicating whether a given date is a weekday or weekend day
 
-```{r}
+
+```r
 dataset.imputed$day <- weekdays(dataset.imputed$date)
 dataset.imputed$day <- sapply(dataset.imputed$day, 
                             function(x) { if(x=='Saturday' || x=='Sunday') 'weekend' else 'weekday' } )
@@ -156,11 +196,11 @@ dataset.imputed$day <- sapply(dataset.imputed$day,
 
 Make a panel plot containing a time series plot of the 5-minute interval (x-axis) and the average number of steps taken, averaged across all weekday days or weekend days (y-axis)
 
-```{r}
-```
 
 
-```{r}
+
+
+```r
 subset.mean <- ddply(dataset.imputed, .(interval, day), summarize, meansteps=mean(steps))
 names(subset.mean) <- c('interval','day','meansteps')
 
@@ -170,3 +210,5 @@ xyplot(subset.mean$meansteps ~ subset.mean$interval | subset.mean$day, type='l',
        ylab='Number of steps',
        layout=c(1,2))
 ```
+
+![plot of chunk unnamed-chunk-17](figure/unnamed-chunk-17.png) 
